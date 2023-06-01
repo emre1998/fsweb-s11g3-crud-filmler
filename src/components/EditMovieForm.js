@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useHistory } from "react-router-dom";
-import { Link } from "react-router-dom";
-
+import { useParams, useHistory,Link } from "react-router-dom";
 import axios from "axios";
 
 const EditMovieForm = (props) => {
+  const {id} = useParams();
   const { push } = useHistory();
 
-  const { setMovies } = props;
+  const { movies,setMovies } = props;
   const [movie, setMovie] = useState({
     title: "",
     director: "",
@@ -15,6 +14,17 @@ const EditMovieForm = (props) => {
     metascore: 0,
     description: "",
   });
+
+  useEffect(()=> {
+    axios
+    .get("http://localhost:9000/api/movies/${id}")
+    .then((res)=> {
+      setMovie(res.data);
+    })
+    .catch((err)=> {
+      console.log(err);
+    });
+  }, [id]);
 
   const handleChange = (e) => {
     setMovie({
@@ -28,8 +38,21 @@ const EditMovieForm = (props) => {
     axios
       .put(`http://localhost:9000/api/movies/${id}`, movie)
       .then((res) => {
-        setMovies(res.data);
-        push(`/movies/${movie.id}`);
+        const updatedMovies = movies.map((m) => {
+          if (m.id === id) {
+            return {
+              ...m,
+              title: movie.title,
+              director: movie.director,
+              genre: movie.genre,
+              metascore: movie.metascore,
+              description: movie.description,
+            };
+          }
+          return m;
+         });
+        setMovies(updatedMovies);
+        push(`/movies/${id}`);
       })
       .catch((err) => {
         console.log(err);
@@ -93,7 +116,7 @@ const EditMovieForm = (props) => {
         </div>
 
         <div className="px-5 py-4 border-t border-zinc-200 flex justify-end gap-2">
-          <Link to={`/movies/1`} className="myButton bg-zinc-500">
+          <Link to={`/movies/${id}`} className="myButton bg-zinc-500">
             Vazgeç
           </Link>
           <button
